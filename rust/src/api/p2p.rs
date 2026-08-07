@@ -1,4 +1,6 @@
-use easytier::common::config::{ConfigFileControl, ConfigLoader, TomlConfigLoader};
+use easytier::common::config::{
+    process_secure_mode_cfg, ConfigFileControl, ConfigLoader, TomlConfigLoader,
+};
 pub use easytier::common::global_ctx::{EventBusSubscriber, GlobalCtxEvent};
 pub use easytier::instance_manager::NetworkInstanceManager;
 pub use easytier::proto;
@@ -251,6 +253,10 @@ pub struct KVNodeInfo {
     pub tx_bytes: u64,
     pub version: String,
     pub cost: i32,
+    /// Noise 远端静态公钥（base64）；空串表示未知。用于房主按凭据踢人。
+    pub remote_static_pubkey_b64: String,
+    /// 是否为凭据节点（无 network_secret）。
+    pub is_credential_peer: bool,
 }
 
 #[derive(Debug)]
@@ -275,6 +281,23 @@ pub async fn create_instance(config_toml: String, watch_event: bool) -> Result<S
         let instance_id = cfg.get_id();
         let instance_id_str = instance_id.to_string();
 
+        // EasyTier 加载 TOML 时不会自动补全 secure_mode 密钥；enabled 但未写
+        // local_private_key 时连公共节点会报 "local private key is not set"。
+        if let Some(sm) = cfg.get_secure_mode() {
+            if sm.enabled {
+                let had_priv = sm.local_private_key.is_some();
+                let processed = process_secure_mode_cfg(sm)
+                    .map_err(|e| format!("invalid secure_mode: {}", e))?;
+                cfg.set_secure_mode(Some(processed));
+                if !had_priv {
+                    emit_core_log(
+                        &instance_id_str,
+                        "secure_mode: generated local keypair (missing in toml)",
+                    );
+                }
+            }
+        }
+
         let network_identity = cfg.get_network_identity();
         let hostname = cfg.get_hostname();
         let dhcp = cfg.get_dhcp();
@@ -282,19 +305,30 @@ pub async fn create_instance(config_toml: String, watch_event: bool) -> Result<S
         let listeners = cfg.get_listeners()
             .map(|l| l.iter().map(|u| u.to_string()).collect::<Vec<_>>().join(", "))
             .unwrap_or_else(|| "none".to_string());
-        let peers = cfg.get_peers()
+        let peers = cfg
+            .get_peers()
             .iter()
             .map(|p| p.uri.to_string())
             .collect::<Vec<_>>()
             .join(", ");
+        let secure_enabled = cfg
+            .get_secure_mode()
+            .map(|sm| sm.enabled)
+            .unwrap_or(false);
+        let secure_has_key = cfg
+            .get_secure_mode()
+            .and_then(|sm| sm.local_private_key)
+            .is_some();
 
         let config_msg = format!(
-            "instance starting. instance_id: {}, network_name: {}, hostname: {}, dhcp: {}, ipv4: {}, listeners: [{}], peers: [{}]",
+            "instance starting. instance_id: {}, network_name: {}, hostname: {}, dhcp: {}, ipv4: {}, secure_mode: enabled={}, has_local_key={}, listeners: [{}], peers: [{}]",
             instance_id,
             network_identity.network_name,
             hostname,
             dhcp,
             ipv4,
+            secure_enabled,
+            secure_has_key,
             listeners,
             peers
         );
@@ -462,6 +496,30 @@ pub fn network_status_from_info(
             collect_relay_hops(&routes_by_peer, route.next_hop_peer_id, route.peer_id)
         };
 
+        let flag_credential = route
+            .feature_flag
+            .as_ref()
+            .map(|f| f.is_credential_peer)
+            .unwrap_or(false);
+
+        let mut remote_static_pubkey_b64 = String::new();
+        let mut identity_credential = false;
+        if let Some(peer) = &p.peer {
+            for conn in &peer.conns {
+                if remote_static_pubkey_b64.is_empty() && !conn.noise_remote_static_pubkey.is_empty()
+                {
+                    use base64::Engine;
+                    remote_static_pubkey_b64 =
+                        base64::engine::general_purpose::STANDARD.encode(&conn.noise_remote_static_pubkey);
+                }
+                if conn.peer_identity_type
+                    == easytier::proto::peer_rpc::PeerIdentityType::Credential as i32
+                {
+                    identity_credential = true;
+                }
+            }
+        }
+
         let mut node_info = KVNodeInfo {
             peer_id: route.peer_id,
             hostname: route.hostname.clone(),
@@ -482,6 +540,8 @@ pub fn network_status_from_info(
                 route.version
             },
             cost: route.cost,
+            remote_static_pubkey_b64,
+            is_credential_peer: flag_credential || identity_credential,
         };
 
         if route.inst_id == "local" || route.peer_id == LOCAL_SYNTHETIC_PEER_ID {
@@ -797,4 +857,143 @@ fn tracing_log_lagged(instance_id: &str, skipped: u64) {
         "[astral_app_rpc] inbound stream lagged for instance {} (skipped {} events)",
         instance_id, skipped
     );
+}
+
+// ============================================================================
+// Credential management (EasyTier CredentialManageRpc)
+// ============================================================================
+
+use easytier::proto::api::instance::{
+    GenerateCredentialRequest, ListCredentialsRequest, RevokeCredentialRequest,
+};
+use easytier::proto::api::instance::CredentialManageRpc as _;
+use easytier::proto::rpc_types::controller::BaseController;
+use easytier::rpc_service::InstanceRpcService;
+
+/// 房主生成的进网凭据（客人用 `credential_secret` 作为 secure_mode.local_private_key）。
+#[derive(Debug, Clone)]
+pub struct GeneratedCredentialC {
+    pub credential_id: String,
+    pub credential_secret: String,
+    /// 与 EasyTier CredentialEntry.pubkey 一致（base64），用于踢人时匹配 peer。
+    pub pubkey_b64: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct CredentialInfoC {
+    pub credential_id: String,
+    pub groups: Vec<String>,
+    pub allow_relay: bool,
+    pub expiry_unix: i64,
+    pub reusable: bool,
+}
+
+fn pubkey_b64_from_credential_secret(secret_b64: &str) -> Result<String, String> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(secret_b64.trim())
+        .map_err(|e| format!("invalid credential_secret base64: {}", e))?;
+    let arr: [u8; 32] = bytes
+        .as_slice()
+        .try_into()
+        .map_err(|_| "credential_secret must be 32 bytes".to_string())?;
+    let private = x25519_dalek::StaticSecret::from(arr);
+    let public = x25519_dalek::PublicKey::from(&private);
+    Ok(base64::engine::general_purpose::STANDARD.encode(public.as_bytes()))
+}
+
+async fn lookup_instance_rpc(
+    instance_id: &str,
+    timeout: std::time::Duration,
+) -> Result<std::sync::Arc<dyn InstanceRpcService>, String> {
+    let id = parse_instance_id(instance_id)?;
+    let step = std::time::Duration::from_millis(50);
+    let deadline = std::time::Instant::now() + timeout;
+    loop {
+        if let Some(svc) = MANAGER.get_instance_service(&id) {
+            return Ok(svc);
+        }
+        if std::time::Instant::now() >= deadline {
+            return Err(format!("instance rpc service not ready: {}", instance_id));
+        }
+        tokio::time::sleep(step).await;
+    }
+}
+
+/// 管理节点（持有 network_secret）生成进网凭据。
+///
+/// `ttl_seconds` 必须 > 0。`reusable=false` 时一人一凭（适合短码邀请）。
+pub async fn generate_credential(
+    instance_id: String,
+    ttl_seconds: i64,
+    reusable: bool,
+) -> Result<GeneratedCredentialC, String> {
+    if ttl_seconds <= 0 {
+        return Err("ttl_seconds must be positive".to_string());
+    }
+    let svc = lookup_instance_rpc(&instance_id, std::time::Duration::from_secs(5)).await?;
+    let resp = svc
+        .get_credential_manage_service()
+        .generate_credential(
+            BaseController::default(),
+            GenerateCredentialRequest {
+                groups: vec![],
+                // 客人经公共服务器进房时需要参与中继路由；false 时易出现连上中继马上断开、无 DHCP。
+                allow_relay: true,
+                allowed_proxy_cidrs: vec![],
+                ttl_seconds,
+                credential_id: None,
+                instance: None,
+                reusable: Some(reusable),
+            },
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    let pubkey_b64 = pubkey_b64_from_credential_secret(&resp.credential_secret)?;
+    Ok(GeneratedCredentialC {
+        credential_id: resp.credential_id,
+        credential_secret: resp.credential_secret,
+        pubkey_b64,
+    })
+}
+
+/// 撤销凭据；成功后对端将被踢出（不再受信任）。
+pub async fn revoke_credential(instance_id: String, credential_id: String) -> Result<bool, String> {
+    let svc = lookup_instance_rpc(&instance_id, std::time::Duration::from_secs(5)).await?;
+    let resp = svc
+        .get_credential_manage_service()
+        .revoke_credential(
+            BaseController::default(),
+            RevokeCredentialRequest {
+                credential_id,
+                instance: None,
+            },
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(resp.success)
+}
+
+/// 列出当前实例上仍有效的凭据。
+pub async fn list_credentials(instance_id: String) -> Result<Vec<CredentialInfoC>, String> {
+    let svc = lookup_instance_rpc(&instance_id, std::time::Duration::from_secs(5)).await?;
+    let resp = svc
+        .get_credential_manage_service()
+        .list_credentials(
+            BaseController::default(),
+            ListCredentialsRequest { instance: None },
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(resp
+        .credentials
+        .into_iter()
+        .map(|c| CredentialInfoC {
+            credential_id: c.credential_id,
+            groups: c.groups,
+            allow_relay: c.allow_relay,
+            expiry_unix: c.expiry_unix,
+            reusable: c.reusable.unwrap_or(true),
+        })
+        .collect())
 }

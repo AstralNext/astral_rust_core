@@ -6,9 +6,9 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `collect_relay_hops`, `emit_core_log`, `ensure_runtime`, `event_to_message`, `get_instance_info`, `lookup_app_rpc_ready`, `lookup_app_rpc`, `parse_instance_id`, `peer_conn_info_to_string`, `spawn_event_forwarder`, `spawn_instance_event_forwarder`, `tracing_log_lagged`
+// These functions are ignored because they are not marked as `pub`: `collect_relay_hops`, `emit_core_log`, `ensure_runtime`, `event_to_message`, `get_instance_info`, `lookup_app_rpc_ready`, `lookup_app_rpc`, `lookup_instance_rpc`, `parse_instance_id`, `peer_conn_info_to_string`, `pubkey_b64_from_credential_secret`, `spawn_event_forwarder`, `spawn_instance_event_forwarder`, `tracing_log_lagged`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `CORE_LOG_SINK`, `MANAGER`, `RT`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `deref`, `deref`, `deref`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `initialize`, `initialize`, `initialize`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `deref`, `deref`, `deref`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `initialize`, `initialize`, `initialize`
 // These functions are ignored (category: IgnoreBecauseExplicitAttribute): `network_status_from_info`, `peer_route_pairs_from_info`
 
 /// Dart 侧订阅内核日志流；后订阅覆盖前订阅。
@@ -125,6 +125,32 @@ Future<bool> appCallReply({
 Future<int> myPeerId({required String instanceId}) =>
     RustLib.instance.api.crateApiP2PMyPeerId(instanceId: instanceId);
 
+/// 管理节点（持有 network_secret）生成进网凭据。
+///
+/// `ttl_seconds` 必须 > 0。`reusable=false` 时一人一凭（适合短码邀请）。
+Future<GeneratedCredentialC> generateCredential({
+  required String instanceId,
+  required PlatformInt64 ttlSeconds,
+  required bool reusable,
+}) => RustLib.instance.api.crateApiP2PGenerateCredential(
+  instanceId: instanceId,
+  ttlSeconds: ttlSeconds,
+  reusable: reusable,
+);
+
+/// 撤销凭据；成功后对端将被踢出（不再受信任）。
+Future<bool> revokeCredential({
+  required String instanceId,
+  required String credentialId,
+}) => RustLib.instance.api.crateApiP2PRevokeCredential(
+  instanceId: instanceId,
+  credentialId: credentialId,
+);
+
+/// 列出当前实例上仍有效的凭据。
+Future<List<CredentialInfoC>> listCredentials({required String instanceId}) =>
+    RustLib.instance.api.crateApiP2PListCredentials(instanceId: instanceId);
+
 /// Result of [`app_call`] — directly maps `AppCallResponse` to a Dart record.
 class AppCallResultC {
   final int status;
@@ -230,6 +256,69 @@ class CoreLogEventC {
           message == other.message;
 }
 
+class CredentialInfoC {
+  final String credentialId;
+  final List<String> groups;
+  final bool allowRelay;
+  final PlatformInt64 expiryUnix;
+  final bool reusable;
+
+  const CredentialInfoC({
+    required this.credentialId,
+    required this.groups,
+    required this.allowRelay,
+    required this.expiryUnix,
+    required this.reusable,
+  });
+
+  @override
+  int get hashCode =>
+      credentialId.hashCode ^
+      groups.hashCode ^
+      allowRelay.hashCode ^
+      expiryUnix.hashCode ^
+      reusable.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CredentialInfoC &&
+          runtimeType == other.runtimeType &&
+          credentialId == other.credentialId &&
+          groups == other.groups &&
+          allowRelay == other.allowRelay &&
+          expiryUnix == other.expiryUnix &&
+          reusable == other.reusable;
+}
+
+/// 房主生成的进网凭据（客人用 `credential_secret` 作为 secure_mode.local_private_key）。
+class GeneratedCredentialC {
+  final String credentialId;
+  final String credentialSecret;
+
+  /// 与 EasyTier CredentialEntry.pubkey 一致（base64），用于踢人时匹配 peer。
+  final String pubkeyB64;
+
+  const GeneratedCredentialC({
+    required this.credentialId,
+    required this.credentialSecret,
+    required this.pubkeyB64,
+  });
+
+  @override
+  int get hashCode =>
+      credentialId.hashCode ^ credentialSecret.hashCode ^ pubkeyB64.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GeneratedCredentialC &&
+          runtimeType == other.runtimeType &&
+          credentialId == other.credentialId &&
+          credentialSecret == other.credentialSecret &&
+          pubkeyB64 == other.pubkeyB64;
+}
+
 class KVNetworkStatus {
   final BigInt totalNodes;
   final List<KVNodeInfo> nodes;
@@ -302,6 +391,12 @@ class KVNodeInfo {
   final String version;
   final int cost;
 
+  /// Noise 远端静态公钥（base64）；空串表示未知。用于房主按凭据踢人。
+  final String remoteStaticPubkeyB64;
+
+  /// 是否为凭据节点（无 network_secret）。
+  final bool isCredentialPeer;
+
   const KVNodeInfo({
     required this.peerId,
     required this.hostname,
@@ -318,6 +413,8 @@ class KVNodeInfo {
     required this.txBytes,
     required this.version,
     required this.cost,
+    required this.remoteStaticPubkeyB64,
+    required this.isCredentialPeer,
   });
 
   @override
@@ -336,7 +433,9 @@ class KVNodeInfo {
       rxBytes.hashCode ^
       txBytes.hashCode ^
       version.hashCode ^
-      cost.hashCode;
+      cost.hashCode ^
+      remoteStaticPubkeyB64.hashCode ^
+      isCredentialPeer.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -357,7 +456,9 @@ class KVNodeInfo {
           rxBytes == other.rxBytes &&
           txBytes == other.txBytes &&
           version == other.version &&
-          cost == other.cost;
+          cost == other.cost &&
+          remoteStaticPubkeyB64 == other.remoteStaticPubkeyB64 &&
+          isCredentialPeer == other.isCredentialPeer;
 }
 
 class NodeHopStats {

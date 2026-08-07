@@ -11,6 +11,8 @@ export 'src/rust/api/p2p.dart'
         AppInboundEventC,
         AppInboundKindC,
         CoreLogEventC,
+        CredentialInfoC,
+        GeneratedCredentialC,
         KVNetworkStatus,
         KVNodeInfo;
 
@@ -179,4 +181,34 @@ class P2PService {
   /// 本机 peer id。
   Future<int> myPeerId(String instanceId) =>
       _withInit(() => p2p.myPeerId(instanceId: instanceId));
+
+  /// 房主生成进网凭据（客人用 [GeneratedCredentialC.credentialSecret] 进网）。
+  Future<p2p.GeneratedCredentialC> generateCredential({
+    required String instanceId,
+    required int ttlSeconds,
+    bool reusable = false,
+  }) =>
+      _withInit(
+        () => p2p.generateCredential(
+          instanceId: instanceId,
+          ttlSeconds: PlatformInt64.parse(ttlSeconds.toString()),
+          reusable: reusable,
+        ),
+      );
+
+  /// 撤销凭据（踢人）。
+  Future<bool> revokeCredential({
+    required String instanceId,
+    required String credentialId,
+  }) =>
+      _withInit(
+        () => p2p.revokeCredential(
+          instanceId: instanceId,
+          credentialId: credentialId,
+        ),
+      );
+
+  /// 列出当前实例有效凭据。
+  Future<List<p2p.CredentialInfoC>> listCredentials(String instanceId) =>
+      _withInit(() => p2p.listCredentials(instanceId: instanceId));
 }

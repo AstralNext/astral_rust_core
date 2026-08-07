@@ -7,6 +7,10 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api/firewall.dart';
+import 'api/forward.dart';
+import 'api/magic_wall.dart';
+import 'api/multicast.dart';
+import 'api/nt.dart';
 import 'api/p2p.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -21,8 +25,86 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     required super.portManager,
   });
 
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_ForwardServerPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_MulticastSenderPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_ServerStatsPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats;
+
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
+  ForwardServer
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    dynamic raw,
+  );
+
+  @protected
+  MulticastSender
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    dynamic raw,
+  );
+
+  @protected
+  ServerStats
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    dynamic raw,
+  );
+
+  @protected
+  ForwardServer
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    dynamic raw,
+  );
+
+  @protected
+  MulticastSender
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    dynamic raw,
+  );
+
+  @protected
+  ForwardServer
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    dynamic raw,
+  );
+
+  @protected
+  MulticastSender
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    dynamic raw,
+  );
+
+  @protected
+  ServerStats
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    dynamic raw,
+  );
+
+  @protected
+  ForwardServer
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    dynamic raw,
+  );
+
+  @protected
+  MulticastSender
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    dynamic raw,
+  );
+
+  @protected
+  ServerStats
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    dynamic raw,
+  );
 
   @protected
   RustStreamSink<AppInboundEventC>
@@ -49,13 +131,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  MagicWallRule dco_decode_box_autoadd_magic_wall_rule(dynamic raw);
+
+  @protected
   CoreLogEventC dco_decode_core_log_event_c(dynamic raw);
+
+  @protected
+  CredentialInfoC dco_decode_credential_info_c(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  GeneratedCredentialC dco_decode_generated_credential_c(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -73,12 +167,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KVNodeInfo dco_decode_kv_node_info(dynamic raw);
 
   @protected
+  LanGameDiscovery dco_decode_lan_game_discovery(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<CredentialInfoC> dco_decode_list_credential_info_c(dynamic raw);
+
+  @protected
   List<KVNodeConnectionStats> dco_decode_list_kv_node_connection_stats(
     dynamic raw,
   );
 
   @protected
   List<KVNodeInfo> dco_decode_list_kv_node_info(dynamic raw);
+
+  @protected
+  List<LanGameDiscovery> dco_decode_list_lan_game_discovery(dynamic raw);
+
+  @protected
+  List<MagicWallRule> dco_decode_list_magic_wall_rule(dynamic raw);
 
   @protected
   List<NodeHopStats> dco_decode_list_node_hop_stats(dynamic raw);
@@ -90,7 +199,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  MagicWallRule dco_decode_magic_wall_rule(dynamic raw);
+
+  @protected
+  MagicWallStatus dco_decode_magic_wall_status(dynamic raw);
+
+  @protected
   NodeHopStats dco_decode_node_hop_stats(dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  (BigInt, BigInt, BigInt) dco_decode_record_usize_u_64_u_64(dynamic raw);
+
+  @protected
+  int dco_decode_u_16(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -109,6 +236,72 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+
+  @protected
+  ForwardServer
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MulticastSender
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ServerStats
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ForwardServer
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MulticastSender
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ForwardServer
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MulticastSender
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ServerStats
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ForwardServer
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MulticastSender
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ServerStats
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    SseDeserializer deserializer,
+  );
 
   @protected
   RustStreamSink<AppInboundEventC>
@@ -135,13 +328,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  MagicWallRule sse_decode_box_autoadd_magic_wall_rule(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   CoreLogEventC sse_decode_core_log_event_c(SseDeserializer deserializer);
+
+  @protected
+  CredentialInfoC sse_decode_credential_info_c(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  GeneratedCredentialC sse_decode_generated_credential_c(
+    SseDeserializer deserializer,
+  );
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -161,12 +370,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KVNodeInfo sse_decode_kv_node_info(SseDeserializer deserializer);
 
   @protected
+  LanGameDiscovery sse_decode_lan_game_discovery(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<CredentialInfoC> sse_decode_list_credential_info_c(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<KVNodeConnectionStats> sse_decode_list_kv_node_connection_stats(
     SseDeserializer deserializer,
   );
 
   @protected
   List<KVNodeInfo> sse_decode_list_kv_node_info(SseDeserializer deserializer);
+
+  @protected
+  List<LanGameDiscovery> sse_decode_list_lan_game_discovery(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<MagicWallRule> sse_decode_list_magic_wall_rule(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<NodeHopStats> sse_decode_list_node_hop_stats(
@@ -180,7 +410,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  MagicWallRule sse_decode_magic_wall_rule(SseDeserializer deserializer);
+
+  @protected
+  MagicWallStatus sse_decode_magic_wall_status(SseDeserializer deserializer);
+
+  @protected
   NodeHopStats sse_decode_node_hop_stats(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  (BigInt, BigInt, BigInt) sse_decode_record_usize_u_64_u_64(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  int sse_decode_u_16(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -200,6 +450,83 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_AnyhowException(
     AnyhowException self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    ForwardServer self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    MulticastSender self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    ServerStats self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    ForwardServer self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    MulticastSender self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    ForwardServer self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    MulticastSender self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    ServerStats self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    ForwardServer self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    MulticastSender self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    ServerStats self,
     SseSerializer serializer,
   );
 
@@ -240,8 +567,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_i_64(
+    PlatformInt64 self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_magic_wall_rule(
+    MagicWallRule self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_core_log_event_c(
     CoreLogEventC self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_credential_info_c(
+    CredentialInfoC self,
     SseSerializer serializer,
   );
 
@@ -250,6 +595,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_generated_credential_c(
+    GeneratedCredentialC self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -273,6 +624,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_kv_node_info(KVNodeInfo self, SseSerializer serializer);
 
   @protected
+  void sse_encode_lan_game_discovery(
+    LanGameDiscovery self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_credential_info_c(
+    List<CredentialInfoC> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_kv_node_connection_stats(
     List<KVNodeConnectionStats> self,
     SseSerializer serializer,
@@ -281,6 +647,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_kv_node_info(
     List<KVNodeInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_lan_game_discovery(
+    List<LanGameDiscovery> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_magic_wall_rule(
+    List<MagicWallRule> self,
     SseSerializer serializer,
   );
 
@@ -300,7 +678,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_magic_wall_rule(MagicWallRule self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_magic_wall_status(
+    MagicWallStatus self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_node_hop_stats(NodeHopStats self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_64(
+    PlatformInt64? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_usize_u_64_u_64(
+    (BigInt, BigInt, BigInt) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_u_16(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
@@ -322,6 +727,54 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
 class RustLibWire implements BaseWire {
   RustLibWire.fromExternalLibrary(ExternalLibrary lib);
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+        ptr,
+      );
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+        ptr,
+      );
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+        ptr,
+      );
 }
 
 @JS('wasm_bindgen')
@@ -329,4 +782,34 @@ external RustLibWasmModule get wasmModule;
 
 @JS()
 @anonymous
-extension type RustLibWasmModule._(JSObject _) implements JSObject {}
+extension type RustLibWasmModule._(JSObject _) implements JSObject {
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerForwardServer(
+    int ptr,
+  );
+
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMulticastSender(
+    int ptr,
+  );
+
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerServerStats(
+    int ptr,
+  );
+}
