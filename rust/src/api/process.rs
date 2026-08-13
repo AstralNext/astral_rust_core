@@ -191,6 +191,10 @@ mod windows_impl {
             if port == 0 {
                 continue;
             }
+            // 只保留 0.0.0.0 监听口。连上玩家后的 connected UDP 会绑在具体网卡 IP 上。
+            if row.dwLocalAddr != 0 {
+                continue;
+            }
             map.entry(row.dwOwningPid).or_default().push(port);
         }
         map
