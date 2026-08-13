@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -104036875;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1052489575;
 
 // Section: executor
 
@@ -1557,6 +1557,43 @@ fn wire__crate__api__p2p__list_credentials_impl(
         },
     )
 }
+fn wire__crate__api__process__list_game_processes_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "list_game_processes",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_exe_names = <Vec<String>>::sse_decode(&mut deserializer);
+            let api_window_needles = <Vec<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::api::process::list_game_processes(
+                        api_exe_names,
+                        api_window_needles,
+                    ))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__p2p__my_peer_id_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2441,6 +2478,24 @@ impl SseDecode for f64 {
     }
 }
 
+impl SseDecode for crate::api::process::GameProcessInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_pid = <u32>::sse_decode(deserializer);
+        let mut var_exe = <String>::sse_decode(deserializer);
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_path = <String>::sse_decode(deserializer);
+        let mut var_udpPorts = <Vec<u16>>::sse_decode(deserializer);
+        return crate::api::process::GameProcessInfo {
+            pid: var_pid,
+            exe: var_exe,
+            title: var_title,
+            path: var_path,
+            udp_ports: var_udpPorts,
+        };
+    }
+}
+
 impl SseDecode for crate::api::p2p::GeneratedCredentialC {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2584,6 +2639,20 @@ impl SseDecode for Vec<crate::api::p2p::CredentialInfoC> {
     }
 }
 
+impl SseDecode for Vec<crate::api::process::GameProcessInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::process::GameProcessInfo>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::p2p::KVNodeConnectionStats> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2645,6 +2714,18 @@ impl SseDecode for Vec<crate::api::p2p::NodeHopStats> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::p2p::NodeHopStats>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<u16> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<u16>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -2932,71 +3013,74 @@ fn pde_ffi_dispatcher_primary_impl(
             data_len,
         ),
         36 => wire__crate__api__p2p__list_credentials_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__p2p__my_peer_id_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__p2p__peer_ping_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__multicast__poll_lan_game_discoveries_impl(
+        37 => {
+            wire__crate__api__process__list_game_processes_impl(port, ptr, rust_vec_len, data_len)
+        }
+        38 => wire__crate__api__p2p__my_peer_id_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__p2p__peer_ping_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__multicast__poll_lan_game_discoveries_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        40 => wire__crate__api__magic_wall__remove_magic_wall_rule_impl(
+        41 => wire__crate__api__magic_wall__remove_magic_wall_rule_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        41 => wire__crate__api__p2p__revoke_credential_impl(port, ptr, rust_vec_len, data_len),
-        42 => {
+        42 => wire__crate__api__p2p__revoke_credential_impl(port, ptr, rust_vec_len, data_len),
+        43 => {
             wire__crate__api__firewall__set_firewall_status_impl(port, ptr, rust_vec_len, data_len)
         }
-        43 => wire__crate__api__p2p__set_tun_fd_impl(port, ptr, rust_vec_len, data_len),
-        44 => {
+        44 => wire__crate__api__p2p__set_tun_fd_impl(port, ptr, rust_vec_len, data_len),
+        45 => {
             wire__crate__api__magic_wall__start_magic_wall_impl(port, ptr, rust_vec_len, data_len)
         }
-        45 => wire__crate__api__multicast__start_minecraft_lan_listener_impl(
+        46 => wire__crate__api__multicast__start_minecraft_lan_listener_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        46 => wire__crate__api__multicast__start_udp_multicast_lan_listener_impl(
+        47 => wire__crate__api__multicast__start_udp_multicast_lan_listener_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        47 => wire__crate__api__forward__stop_all_forward_servers_impl(
+        48 => wire__crate__api__forward__stop_all_forward_servers_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        48 => wire__crate__api__multicast__stop_all_lan_game_listeners_impl(
+        49 => wire__crate__api__multicast__stop_all_lan_game_listeners_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        49 => wire__crate__api__multicast__stop_all_multicast_senders_impl(
+        50 => wire__crate__api__multicast__stop_all_multicast_senders_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        50 => {
+        51 => {
             wire__crate__api__forward__stop_forward_server_impl(port, ptr, rust_vec_len, data_len)
         }
-        51 => wire__crate__api__magic_wall__stop_magic_wall_impl(port, ptr, rust_vec_len, data_len),
-        52 => wire__crate__api__multicast__stop_multicast_sender_impl(
+        52 => wire__crate__api__magic_wall__stop_magic_wall_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__api__multicast__stop_multicast_sender_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        53 => wire__crate__api__p2p__subscribe_app_inbound_impl(port, ptr, rust_vec_len, data_len),
-        54 => wire__crate__api__p2p__subscribe_core_logs_impl(port, ptr, rust_vec_len, data_len),
-        55 => wire__crate__api__magic_wall__update_magic_wall_rule_impl(
+        54 => wire__crate__api__p2p__subscribe_app_inbound_impl(port, ptr, rust_vec_len, data_len),
+        55 => wire__crate__api__p2p__subscribe_core_logs_impl(port, ptr, rust_vec_len, data_len),
+        56 => wire__crate__api__magic_wall__update_magic_wall_rule_impl(
             port,
             ptr,
             rust_vec_len,
@@ -3185,6 +3269,30 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::p2p::CredentialInfoC>
     for crate::api::p2p::CredentialInfoC
 {
     fn into_into_dart(self) -> crate::api::p2p::CredentialInfoC {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::process::GameProcessInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.pid.into_into_dart().into_dart(),
+            self.exe.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.path.into_into_dart().into_dart(),
+            self.udp_ports.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::process::GameProcessInfo
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::process::GameProcessInfo>
+    for crate::api::process::GameProcessInfo
+{
+    fn into_into_dart(self) -> crate::api::process::GameProcessInfo {
         self
     }
 }
@@ -3551,6 +3659,17 @@ impl SseEncode for f64 {
     }
 }
 
+impl SseEncode for crate::api::process::GameProcessInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.pid, serializer);
+        <String>::sse_encode(self.exe, serializer);
+        <String>::sse_encode(self.title, serializer);
+        <String>::sse_encode(self.path, serializer);
+        <Vec<u16>>::sse_encode(self.udp_ports, serializer);
+    }
+}
+
 impl SseEncode for crate::api::p2p::GeneratedCredentialC {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3647,6 +3766,16 @@ impl SseEncode for Vec<crate::api::p2p::CredentialInfoC> {
     }
 }
 
+impl SseEncode for Vec<crate::api::process::GameProcessInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::process::GameProcessInfo>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::p2p::KVNodeConnectionStats> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3693,6 +3822,16 @@ impl SseEncode for Vec<crate::api::p2p::NodeHopStats> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::p2p::NodeHopStats>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<u16> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <u16>::sse_encode(item, serializer);
         }
     }
 }

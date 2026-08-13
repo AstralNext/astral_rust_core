@@ -41,4 +41,5 @@ export 'src/rust/api/p2p.dart'
         CoreLogEventC,
         KVNetworkStatus,
         KVNodeInfo;
+export 'src/rust/api/process.dart' show listGameProcesses, GameProcessInfo;
 export 'p2p_service.dart';

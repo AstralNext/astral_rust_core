@@ -12,6 +12,7 @@ import 'api/magic_wall.dart';
 import 'api/multicast.dart';
 import 'api/nt.dart';
 import 'api/p2p.dart';
+import 'api/process.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -149,6 +150,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_f_64(dynamic raw);
 
   @protected
+  GameProcessInfo dco_decode_game_process_info(dynamic raw);
+
+  @protected
   GeneratedCredentialC dco_decode_generated_credential_c(dynamic raw);
 
   @protected
@@ -176,6 +180,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<CredentialInfoC> dco_decode_list_credential_info_c(dynamic raw);
 
   @protected
+  List<GameProcessInfo> dco_decode_list_game_process_info(dynamic raw);
+
+  @protected
   List<KVNodeConnectionStats> dco_decode_list_kv_node_connection_stats(
     dynamic raw,
   );
@@ -191,6 +198,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<NodeHopStats> dco_decode_list_node_hop_stats(dynamic raw);
+
+  @protected
+  Uint16List dco_decode_list_prim_u_16_strict(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -348,6 +358,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
+  GameProcessInfo sse_decode_game_process_info(SseDeserializer deserializer);
+
+  @protected
   GeneratedCredentialC sse_decode_generated_credential_c(
     SseDeserializer deserializer,
   );
@@ -381,6 +394,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<GameProcessInfo> sse_decode_list_game_process_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<KVNodeConnectionStats> sse_decode_list_kv_node_connection_stats(
     SseDeserializer deserializer,
   );
@@ -402,6 +420,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<NodeHopStats> sse_decode_list_node_hop_stats(
     SseDeserializer deserializer,
   );
+
+  @protected
+  Uint16List sse_decode_list_prim_u_16_strict(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -597,6 +618,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_game_process_info(
+    GameProcessInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_generated_credential_c(
     GeneratedCredentialC self,
     SseSerializer serializer,
@@ -639,6 +666,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_game_process_info(
+    List<GameProcessInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_kv_node_connection_stats(
     List<KVNodeConnectionStats> self,
     SseSerializer serializer,
@@ -665,6 +698,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_node_hop_stats(
     List<NodeHopStats> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_u_16_strict(
+    Uint16List self,
     SseSerializer serializer,
   );
 

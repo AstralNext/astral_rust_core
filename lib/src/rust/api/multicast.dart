@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `bind_udp_reuse`, `extract_tag`, `is_own_source`, `local_ipv4_set`, `now_unix_ms`, `parse_lan_payload`, `parse_minecraft_motd`
+// These functions are ignored because they are not marked as `pub`: `bind_udp_reuse`, `extract_tag`, `is_own_inject_payload`, `is_own_source`, `local_ipv4_set`, `now_unix_ms`, `parse_lan_payload`, `parse_minecraft_motd`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `LAN_DISCOVERIES`, `LAN_LISTENERS`, `LanGameListener`, `MULTICAST_RT`, `MULTICAST_SENDERS`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `deref`, `deref`, `deref`, `deref`, `initialize`, `initialize`, `initialize`, `initialize`
 // These functions are ignored (category: IgnoreBecauseExplicitAttribute): `new`, `with_bind_addr`
@@ -60,7 +60,7 @@ Future<bool> isMulticastSenderRunning({required BigInt index}) => RustLib
 
 /// 启动通用 UDP 组播监听；`parser` 决定如何从载荷提取游戏端口。
 ///
-/// 已知 parser：`minecraft_motd`。仅收录本机网卡/回环来源。
+/// 已知 parser：`minecraft_motd`。仅收录本机网卡来源（不含回环/自身注入）。
 Future<BigInt> startUdpMulticastLanListener({
   required String multicastAddr,
   required int port,
