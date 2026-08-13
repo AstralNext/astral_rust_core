@@ -177,14 +177,15 @@ pub fn stop_multicast_sender(index: usize) -> Result<(), String> {
 pub fn stop_all_multicast_senders() -> Result<(), String> {
     MULTICAST_RT.block_on(async move {
         let mut senders = MULTICAST_SENDERS.lock().await;
-        
-        for (index, sender) in senders.iter_mut().enumerate() {
-            sender.stop().await;
-            println!("组播发送器已停止，索引: {}", index);
+        if senders.is_empty() {
+            return Ok(());
         }
-        
+        let n = senders.len();
+        for sender in senders.iter_mut() {
+            sender.stop().await;
+        }
         senders.clear();
-        println!("所有组播发送器已停止");
+        println!("已停止 {n} 个组播发送器");
         Ok(())
     })
 }
