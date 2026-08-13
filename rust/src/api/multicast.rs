@@ -59,6 +59,9 @@ impl MulticastSender {
         }
 
         let socket = UdpSocket::bind(&self.bind_addr).await?;
+        // 关掉 loopback，避免本机发现器把刚注入的组播再吃回去（风暴）。
+        let _ = socket.set_multicast_loop_v4(false);
+        let _ = socket.set_multicast_ttl_v4(1);
         let multicast_addr = self.multicast_addr;
         let data = self.data.clone();
         let interval_ms = self.interval_ms;
@@ -246,11 +249,12 @@ fn now_unix_ms() -> u64 {
 
 fn local_ipv4_set() -> std::collections::HashSet<Ipv4Addr> {
     let mut set = std::collections::HashSet::new();
-    set.insert(Ipv4Addr::LOCALHOST);
     if let Ok(list) = local_ip_address::list_afinet_netifas() {
         for (_, ip) in list {
             if let IpAddr::V4(v4) = ip {
-                set.insert(v4);
+                if !v4.is_loopback() {
+                    set.insert(v4);
+                }
             }
         }
     }
@@ -259,9 +263,14 @@ fn local_ipv4_set() -> std::collections::HashSet<Ipv4Addr> {
 
 fn is_own_source(src: IpAddr, locals: &std::collections::HashSet<Ipv4Addr>) -> bool {
     match src {
-        IpAddr::V4(v4) => v4.is_loopback() || locals.contains(&v4),
-        IpAddr::V6(v6) => v6.is_loopback(),
+        // 回环 = 本机 127 注入，不参与发现（防风暴）；真 MC 来自网卡 IP。
+        IpAddr::V4(v4) => !v4.is_loopback() && locals.contains(&v4),
+        IpAddr::V6(_) => false,
     }
+}
+
+fn is_own_inject_payload(data: &[u8], injects: &[Vec<u8>]) -> bool {
+    injects.iter().any(|p| p.as_slice() == data)
 }
 
 /// 可插拔载荷解析：返回 (显示名/motd, 游戏端口)。
@@ -313,7 +322,7 @@ async fn bind_udp_reuse(addr: &str) -> io::Result<UdpSocket> {
 
 /// 启动通用 UDP 组播监听；`parser` 决定如何从载荷提取游戏端口。
 ///
-/// 已知 parser：`minecraft_motd`。仅收录本机网卡/回环来源。
+/// 已知 parser：`minecraft_motd`。仅收录本机网卡来源（不含回环/自身注入）。
 pub fn start_udp_multicast_lan_listener(
     multicast_addr: String,
     port: u16,
@@ -353,6 +362,17 @@ pub fn start_udp_multicast_lan_listener(
                     r = socket.recv_from(&mut buf) => {
                         let Ok((n, src)) = r else { continue };
                         if !is_own_source(src.ip(), &locals) {
+                            continue;
+                        }
+                        let injects = {
+                            let senders = MULTICAST_SENDERS.lock().await;
+                            senders
+                                .iter()
+                                .filter(|s| s.is_running())
+                                .map(|s| s.data.clone())
+                                .collect::<Vec<_>>()
+                        };
+                        if is_own_inject_payload(&buf[..n], &injects) {
                             continue;
                         }
                         let Some((motd, game_port)) =
