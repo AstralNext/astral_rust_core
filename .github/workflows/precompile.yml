@@ -1,0 +1,117 @@
+name: Precompile binaries
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'rust/**'
+      - '.github/workflows/precompile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: precompile-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NDK_VERSION: '28.2.13676358'
+
+jobs:
+  linux-android:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: >-
+            tools platform-tools platforms;android-35 build-tools;35.0.0 ndk;${{ env.NDK_VERSION }} cmake;3.22.1
+
+      - name: Android bindgen sysroot
+        run: |
+          NDK_PATH=$ANDROID_HOME/ndk/${{ env.NDK_VERSION }}
+          SYSROOT=$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+          echo "BINDGEN_EXTRA_CLANG_ARGS=--sysroot=$SYSROOT" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,x86_64-unknown-linux-gnu
+
+      - uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential ninja-build clang cmake pkg-config \
+            libssl-dev protobuf-compiler
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Precompile Linux + Android arm64
+        working-directory: cargokit/build_tool
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          dart pub get
+          dart run bin/build_tool.dart precompile-binaries -v \
+            --repository AstralNext/astral_rust_core \
+            --manifest-dir "$GITHUB_WORKSPACE/rust" \
+            --target aarch64-linux-android \
+            --target x86_64-unknown-linux-gnu \
+            --android-sdk-location "$ANDROID_HOME" \
+            --android-ndk-version "$NDK_VERSION" \
+            --android-min-sdk-version 21
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: NASM
+        shell: pwsh
+        run: |
+          choco install nasm --yes --no-progress
+          $nasmDir = 'C:\Program Files\NASM'
+          if (Test-Path $nasmDir) {
+            Add-Content -Path $env:GITHUB_PATH -Value $nasmDir
+          }
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Precompile Windows
+        working-directory: cargokit/build_tool
+        shell: bash
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          dart pub get
+          dart run bin/build_tool.dart precompile-binaries -v \
+            --repository AstralNext/astral_rust_core \
+            --manifest-dir "$GITHUB_WORKSPACE/rust" \
+            --target x86_64-pc-windows-msvc
