@@ -20,7 +20,7 @@ env:
   NDK_VERSION: '28.2.13676358'
 
 jobs:
-  linux-android:
+  android:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
@@ -43,24 +43,17 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,x86_64-unknown-linux-gnu
+          targets: aarch64-linux-android
 
       - uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Linux build deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential ninja-build clang cmake pkg-config \
-            libssl-dev protobuf-compiler
-
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
 
-      - name: Precompile Linux + Android arm64
+      - name: Precompile Android arm64
         working-directory: cargokit/build_tool
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
@@ -73,10 +66,46 @@ jobs:
             --repository AstralNext/astral_rust_core \
             --manifest-dir "$GITHUB_WORKSPACE/rust" \
             --target aarch64-linux-android \
-            --target x86_64-unknown-linux-gnu \
             --android-sdk-location "$ANDROID_HOME" \
             --android-ndk-version "$NDK_VERSION" \
             --android-min-sdk-version 21
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential ninja-build clang libclang-dev cmake pkg-config \
+            libssl-dev protobuf-compiler
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Precompile Linux
+        working-directory: cargokit/build_tool
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          dart pub get
+          dart run bin/build_tool.dart precompile-binaries -v \
+            --repository AstralNext/astral_rust_core \
+            --manifest-dir "$GITHUB_WORKSPACE/rust" \
+            --target x86_64-unknown-linux-gnu
 
   windows:
     runs-on: windows-2022
