@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'rust/**'
+      - 'cargokit/**'
       - '.github/workflows/precompile.yml'
   workflow_dispatch:
 
@@ -66,6 +67,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          chmod +x "$GITHUB_WORKSPACE/cargokit/run_build_tool.sh"
           dart pub get
           dart run bin/build_tool.dart precompile-binaries -v \
             --repository AstralNext/astral_rust_core \
